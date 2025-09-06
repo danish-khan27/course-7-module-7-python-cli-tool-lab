@@ -1,41 +1,47 @@
-# cli_tool.py
-
 import argparse
-from models import Task, User
+from lib.models import Task, User
 
-# Global dictionary to store users and their tasks
+# in-memory user store for this process
 users = {}
 
-# TODO: Implement function to add a task for a user
 def add_task(args):
-    # - Check if the user exists, if not, create one
-    # - Create a new Task with the given title
-    # - Add the task to the user's task list
-    pass
+    # get or create user
+    user = users.get(args.user)
+    if not user:
+        user = User(args.user)
+        users[args.user] = user
 
-# TODO: Implement function to mark a task as complete
+    # add the task
+    task = Task(args.title)
+    user.add_task(task)
+
 def complete_task(args):
-    # - Look up the user by name
-    # - Look up the task by title
-    # - Mark the task as complete
-    # - Print appropriate error messages if not found
-    pass
+    user = users.get(args.user)
+    if not user:
+        print("❌ User not found.")
+        return
 
-# CLI entry point
+    task = user.get_task_by_title(args.title)
+    if not task:
+        print("❌ Task not found.")
+        return
+
+    task.complete()
+
 def main():
     parser = argparse.ArgumentParser(description="Task Manager CLI")
     subparsers = parser.add_subparsers()
 
-    # Subparser for adding tasks
-    add_parser = subparsers.add_parser("add-task", help="Add a task for a user")
-    add_parser.add_argument("user")
-    add_parser.add_argument("title")
+    # add-task
+    add_parser = subparsers.add_parser("add-task", help="Add a new task")
+    add_parser.add_argument("user", help="User's name")
+    add_parser.add_argument("title", help="Task title")
     add_parser.set_defaults(func=add_task)
 
-    # Subparser for completing tasks
-    complete_parser = subparsers.add_parser("complete-task", help="Complete a user's task")
-    complete_parser.add_argument("user")
-    complete_parser.add_argument("title")
+    # complete-task
+    complete_parser = subparsers.add_parser("complete-task", help="Complete a task")
+    complete_parser.add_argument("user", help="User's name")
+    complete_parser.add_argument("title", help="Task title")
     complete_parser.set_defaults(func=complete_task)
 
     args = parser.parse_args()
